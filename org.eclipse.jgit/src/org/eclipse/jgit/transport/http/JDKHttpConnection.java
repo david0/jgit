@@ -44,6 +44,8 @@ import org.eclipse.jgit.util.HttpSupport;
 public class JDKHttpConnection implements HttpConnection {
 	HttpURLConnection wrappedUrlConnection;
 
+	private KeyManager[] keyManagers;
+
 	// used for mock testing
 	JDKHttpConnection(HttpURLConnection urlConnection) {
 		this.wrappedUrlConnection = urlConnection;
@@ -235,15 +237,18 @@ public class JDKHttpConnection implements HttpConnection {
 			KeyManagementException {
 		SSLContext ctx = SSLContext.getInstance("TLS"); //$NON-NLS-1$
 		ctx.init(km, tm, random);
+		this.keyManagers = km;
 		((HttpsURLConnection) wrappedUrlConnection).setSSLSocketFactory(
 				new DelegatingSSLSocketFactory(ctx.getSocketFactory()) {
 
 					@Override
-					protected void configure(SSLSocket socket)
-							throws IOException {
+					protected void configure(SSLSocket socket) {
 						HttpSupport.configureTLS(socket);
 					}
 				});
 	}
 
+	public KeyManager[] getKeyManagers() {
+		return keyManagers;
+	}
 }

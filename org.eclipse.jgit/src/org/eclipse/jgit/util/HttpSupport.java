@@ -32,6 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
@@ -39,6 +40,7 @@ import javax.net.ssl.X509TrustManager;
 
 import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.transport.http.HttpConnection;
+import org.eclipse.jgit.transport.http.JDKHttpConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,7 +306,12 @@ public class HttpSupport {
 		final TrustManager[] trustAllCerts = new TrustManager[] {
 				new DummyX509TrustManager() };
 		try {
-			conn.configure(null, trustAllCerts, null);
+			KeyManager[] keyManager = null;
+			if(conn instanceof JDKHttpConnection) {
+				JDKHttpConnection jdkHttpConnection = (JDKHttpConnection) conn;
+				keyManager = jdkHttpConnection.getKeyManagers();
+			}
+			conn.configure(keyManager, trustAllCerts, null);
 			conn.setHostnameVerifier(new DummyHostnameVerifier());
 		} catch (KeyManagementException | NoSuchAlgorithmException e) {
 			throw new IOException(e.getMessage());
